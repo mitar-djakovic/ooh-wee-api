@@ -16,7 +16,8 @@
         "sourceType": "module"
     },
     "plugins": [
-        "@typescript-eslint"
+        "@typescript-eslint",
+        "simple-import-sort"
     ],
     "rules": {
         "@typescript-eslint/no-unused-vars": "error",
@@ -35,6 +36,22 @@
         "semi": [
             "error",
             "always"
-        ]
+        ],
+        "simple-import-sort/imports": [
+            "error",
+            {
+                "groups": [
+                    // Internal packages.
+                    ["^(@|components)(/.*|$)"],
+                    // Side effect imports.
+                    ["^\\u0000"],
+                    // Parent imports. Put `..` last.
+                    ["^\\.\\.(?!/?$)", "^\\.\\./?$"],
+                    // Other relative imports. Put same-folder imports and `.` last.
+                    ["^\\./(?=.*/)(?!/?$)", "^\\.(?!/?$)", "^\\./?$"]
+                ]
+            }
+        ],
+        "simple-import-sort/exports": "error"
     }
 }
