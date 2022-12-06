@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
 import { ApplicationError } from '../../middlewares/errors';
 import prisma from '../../utils/prisma';
@@ -13,14 +14,14 @@ interface User {
 }
 
 export const signupService = async (user: User) => {
+	const hashedPassword = await bcrypt.hash(user.password, 10);
 	try {
 		await prisma.user.create({
 			data: {
 				firstName: user.firstName,
 				lastName: user.lastName,
 				email: user.email,
-				password: user.password,
-				confirmPassword: user.confirmPassword
+				password: hashedPassword,
 			}
 		});
 	} catch (error) {

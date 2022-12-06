@@ -24,7 +24,6 @@ router.post('/signup', validate(schema), async (req: Request, res: Response, nex
 
 		return res.status(201).json({ message: 'Account created', status: 201 });
 	} catch (error) {
-
 		res.json(error).end();
 		next(error);
 	}

@@ -11,13 +11,14 @@ const validate = (schema: AnyObjectSchema) => async (req: Request, res: Response
 	} catch (e) {
 		if (e instanceof ValidationError) {
 			const errors: Errors = {};
+
 			e.inner.map((err) => {
 				if (err.path) {
 					errors[err.path] = err.errors[0];
 				}
 			});
 
-			return res.json({ errors }).status(422).end();
+			return res.status(422).json(errors).end();
 		}
 
 		next(e);
