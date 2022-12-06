@@ -1,29 +1,32 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import * as yup from 'yup';
 
-import validate from '../../middlewares';
+import { validate } from '../../middlewares';
 
 import { signupService } from './Signup.service';
 
 const router = Router();
 
 const schema = yup.object({
-	firstName: yup.string().min(3, 'First name must be at least 3 character long').required('First name is a required'),
-	lastName: yup.string().required('Last name is a required'),
-	username: yup.string().required('Username is a required'),
-	email: yup.string().email('Please provide a valid email').required('Email is a required'),
-	password: yup.string().required(),
+	firstName: yup.string().required('First name is required'),
+	lastName: yup.string().required('Last name is required'),
+	username: yup.string().required('Username is required'),
+	email: yup.string().email('Please provide a valid email').required('Email is required'),
+	password: yup.string().required('Password is required'),
 	confirmPassword: yup.string()
-		.oneOf([yup.ref('password'), null], 'Passwords must match')
+		.oneOf([yup.ref('password'), null], 'Passwords must match').required('Confirm password is required')
 });
 
 router.post('/signup', validate(schema), async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		// console.log('request', req.body);
-		// const response = await signupService(req.body);
-		// console.log('response', response);
+		await signupService(req.body);
+
+		return res.status(201).json({ message: 'Account created', status: 201 });
 	} catch (error) {
-		console.log('error +++', error);
+
+		res.json(error).end();
+		next(error);
 	}
 });
 

@@ -1,8 +1,20 @@
+import { Prisma } from '@prisma/client';
+
+import { ApplicationError } from '../../middlewares/errors';
 import prisma from '../../utils/prisma';
 
-export const signupService = async (user: any) => {
+interface User {
+	firstName: string;
+	lastName: string;
+	userName: string;
+	email: string;
+	password: string;
+	confirmPassword: string;
+}
+
+export const signupService = async (user: User) => {
 	try {
-		const response = await prisma.user.create({
+		await prisma.user.create({
 			data: {
 				firstName: user.firstName,
 				lastName: user.lastName,
@@ -11,8 +23,12 @@ export const signupService = async (user: any) => {
 				confirmPassword: user.confirmPassword
 			}
 		});
-		console.log('response2', response);
 	} catch (error) {
-		console.log('error', error);
+		if (error instanceof  Prisma.PrismaClientKnownRequestError) {
+			if (error.code === 'P2002') {
+				throw new ApplicationError('Email already in use!', 404);
+			}
+		}
+		throw error;
 	}
 };
