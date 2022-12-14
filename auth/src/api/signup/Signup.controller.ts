@@ -19,7 +19,6 @@ const schema = yup.object({
 
 router.post('/signup', validate(schema), async (req: Request, res: Response, next: NextFunction) => {
 	try {
-		// console.log('request', req.body);
 		await signupService(req.body);
 
 		return res.status(201).json({ message: 'Account created', status: 201 });
