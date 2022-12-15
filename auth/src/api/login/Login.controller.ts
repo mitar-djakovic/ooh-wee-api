@@ -15,8 +15,9 @@ const schema = yup.object({
 
 router.post('/login', validate(schema), async(req: Request, res: Response) => {
 	try {
-		const response = await loginService(req.body);
-		if (!response) {
+		const { success, token } = await loginService(req.body);
+
+		if (!success) {
 			throw new ApplicationError('Password or email is incorrect', 404);
 		}
 
