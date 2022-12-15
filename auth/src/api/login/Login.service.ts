@@ -9,7 +9,12 @@ interface Credentials {
 	password: string;
 }
 
-export const loginService = async (credentials: Credentials) => {
+interface LoginResponse {
+	success: boolean;
+	token: string | null
+}
+
+export const loginService = async (credentials: Credentials): Promise<LoginResponse> => {
 	try {
 		const user = await prisma.user.findUniqueOrThrow({
 			where: {
@@ -29,7 +34,7 @@ export const loginService = async (credentials: Credentials) => {
 		}
 		return {
 			success: false,
-			token: ''
+			token: null
 		};
 	} catch (error) {
 		throw new ApplicationError('Password or email is incorrect', 404);

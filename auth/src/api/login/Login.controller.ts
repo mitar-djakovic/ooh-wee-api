@@ -17,11 +17,17 @@ router.post('/login', validate(schema), async(req: Request, res: Response) => {
 	try {
 		const { success, token } = await loginService(req.body);
 
+		console.log('token', token);
 		if (!success) {
 			throw new ApplicationError('Password or email is incorrect', 404);
 		}
-
-		return res.status(200).json({ message: 'Logged in successfully!', status: 200 });
+		return res
+			.status(200)
+			.cookie('access_token', token)
+			.json({
+				message: 'Logged in successfully!',
+				status: 200
+			});
 	} catch (error) {
 		res.json(error).end();
 	}
