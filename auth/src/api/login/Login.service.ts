@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 import { ApplicationError } from '../../middlewares/errors';
 import prisma from '../../utils/prisma';
@@ -8,15 +9,33 @@ interface Credentials {
 	password: string;
 }
 
-export const loginService = async (credentials: Credentials) => {
-	console.log('credentials', credentials);
+interface LoginResponse {
+	success: boolean;
+	token: string | null
+}
+
+export const loginService = async (credentials: Credentials): Promise<LoginResponse> => {
 	try {
 		const user = await prisma.user.findUniqueOrThrow({
 			where: {
 				email: credentials.email,
 			}
 		});
-		return await bcrypt.compare(credentials.password, user.password);
+		const match = await bcrypt.compare(credentials.password, user.password);
+		if (match) {
+			const token = jwt.sign({ email: credentials.email }, process.env.TOKEN_SECRET as string, {
+				expiresIn: '1800s',
+			});
+
+			return {
+				success: match,
+				token
+			};
+		}
+		return {
+			success: false,
+			token: null
+		};
 	} catch (error) {
 		throw new ApplicationError('Password or email is incorrect', 404);
 	}
