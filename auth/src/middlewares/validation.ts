@@ -18,7 +18,12 @@ const validate = (schema: AnyObjectSchema) => async (req: Request, res: Response
 				}
 			});
 
-			return res.status(422).json(errors).end();
+			const response = {
+				errors,
+				status: 422
+			};
+
+			return res.status(422).json(response).end();
 		}
 
 		next(e);
