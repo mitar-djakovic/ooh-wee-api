@@ -29,7 +29,9 @@ router.post('/login', validate(schema), async(req: Request, res: Response) => {
 				status: 200
 			});
 	} catch (error) {
-		res.json(error).end();
+		if (error instanceof ApplicationError) {
+			res.status(error.status).json(error).end();
+		}
 	}
 });
 
