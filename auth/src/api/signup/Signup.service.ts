@@ -22,9 +22,11 @@ export const signupService = async (user: User) => {
 				lastName: user.lastName,
 				email: user.email,
 				password: hashedPassword,
+				emailVerifiedAt: null
 			}
 		});
 	} catch (error) {
+		console.log('error', error);
 		if (error instanceof  Prisma.PrismaClientKnownRequestError) {
 			if (error.code === 'P2002') {
 				throw new ApplicationError('Email already in use!', 404);
