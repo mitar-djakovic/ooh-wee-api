@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response, Router } from 'express';
+import { Request, Response, Router } from 'express';
 import * as yup from 'yup';
 
 import { validate } from '../../middlewares';
@@ -17,7 +17,7 @@ const schema = yup.object({
 		.oneOf([yup.ref('password'), null], 'Passwords must match').required('Confirm password is required')
 });
 
-router.post('/signup', validate(schema), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/signup', validate(schema), async (req: Request, res: Response) => {
 	try {
 		await signupService(req.body);
 
