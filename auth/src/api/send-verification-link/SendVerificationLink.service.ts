@@ -3,7 +3,7 @@ import AWS from 'aws-sdk';
 import { ApplicationError } from '../../middlewares/errors';
 import prisma from '../../utils/prisma';
 
-export const resendVerifyLinkService = async (email: string) => {
+export const sendVerificationLinkService = async (email: string) => {
 	try {
 		const awsConfig = {
 			accessKeyId: process.env.AWS_ACCESS_KEY_ID,
