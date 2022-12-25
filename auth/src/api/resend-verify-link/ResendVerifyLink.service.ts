@@ -1,52 +1,55 @@
 import AWS from 'aws-sdk';
 
+import { ApplicationError } from '../../middlewares/errors';
 import prisma from '../../utils/prisma';
 
 export const resendVerifyLinkService = async (email: string) => {
-	console.log('email', email);
 	try {
-		const user = await prisma.user.findUniqueOrThrow({ where: {
-			email
-		}});
-
 		const awsConfig = {
 			accessKeyId: process.env.AWS_ACCESS_KEY_ID,
 			secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 			region: process.env.AWS_REGION,
 		};
-
-		const SES = new AWS.SES(awsConfig);
-
-		const params = {
-			Source: 'mitar-djakovic2401993@hotmail.com',
-			Destination: {
-				ToAddresses: ['roker.93@hotmail.com']
-			},
-			Message: {
-				Subject: {
-					Charset: 'UTF-8',
-					Data: 'Your code is blabla truc'
+		
+		const user = await prisma.user.findUniqueOrThrow({ where: {
+			email
+		}});
+		
+		if (user) {
+			const SES = new AWS.SES(awsConfig);
+			
+			const params = {
+				Source: process.env.AWS_EMAIL_SOURCE,
+				Destination: {
+					ToAddresses: [user.email]
 				},
-				Body: {
-					Html: {
+				Message: {
+					Subject: {
 						Charset: 'UTF-8',
-						Data: '<div><h1>Some text</h1></div>'
+						Data: 'Ohh Wee email verification link!'
+					},
+					Body: {
+						Html: {
+							Charset: 'UTF-8',
+							Data: `<div><h1>Click on the <a href='http://localhost:3000/verification/:${user.email}'>link</a> to verify account</h1></div>`
+						}
 					}
 				}
-			}
-		};
+			};
+			
+			try {
+				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// @ts-ignore
+				await SES.sendEmail(params).promise();
 
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-ignore
-		const emailSent = await SES.sendEmail(params).promise();
-		console.log('emailSent', emailSent);
-		// emailSent.then((res) => {
-		// 	console.log('res', res);
-		// }).catch((error: any) => {
-		// 	console.log('error', error);
-		// });
-		console.log('user', user);
+				return {
+					success: true
+				};
+			} catch (innerError) {
+				throw new ApplicationError('Something went wrong', 500);
+			}
+		}
 	}catch (error) {
-		console.log('error1', error);
+		throw new ApplicationError('Verification link is sent to email address', 404);
 	}
 };

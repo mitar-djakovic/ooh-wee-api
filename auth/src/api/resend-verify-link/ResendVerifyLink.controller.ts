@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express';
 import * as yup from 'yup';
 
 import { validate } from '../../middlewares';
+import { ApplicationError } from '../../middlewares/errors';
 
 import { resendVerifyLinkService } from './ResendVerifyLink.service';
 
@@ -12,12 +13,16 @@ const schema = yup.object({
 });
 
 router.post('/resend-verify-link', validate(schema), async(req: Request, res: Response, next: NextFunction) => {
-	console.log('verify');
 	try {
 		const response = await resendVerifyLinkService(req.body.email);
-		console.log('response', response);
+
+		if (response?.success) {
+			return res.status(201).json({ message: 'Verification link is sent to email address', status: 201 });
+		}
 	} catch (error) {
-		console.log('error', error);
+		if (error instanceof ApplicationError) {
+			return res.status(error.status).json(error).end();
+		}
 	}
 });
 
