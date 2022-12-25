@@ -2,7 +2,7 @@ import AWS from 'aws-sdk';
 
 import prisma from '../../utils/prisma';
 
-export const verifyService = async (email: string) => {
+export const resendVerifyLinkService = async (email: string) => {
 	console.log('email', email);
 	try {
 		const user = await prisma.user.findUniqueOrThrow({ where: {

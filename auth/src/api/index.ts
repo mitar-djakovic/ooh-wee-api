@@ -1,12 +1,12 @@
 import { Router } from 'express';
 
 import login from './login';
+import resendVerifyLink from './resend-verify-link';
 import signup from './signup';
-import verify from './verify';
 
 const routes = Router()
 	.use(signup)
 	.use(login)
-	.use(verify);
+	.use(resendVerifyLink);
 
 export default Router().use('/api/auth', routes);
