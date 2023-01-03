@@ -1,23 +1,23 @@
 import { Request, Response, Router } from 'express';
 import * as yup from 'yup';
 
+import { Route } from '../../config';
 import { validate } from '../../middlewares';
 import { ApplicationError } from '../../middlewares/errors';
 
-import { sendVerificationLinkService } from './SendVerificationLink.service';
-
-const router = Router();
+import { confirmEmail } from './ConfirmEmail.service';
 
 const schema = yup.object({
 	email: yup.string().email('Please provide a valid email').required('Email is required'),
 });
 
-router.post('/send-verification-link', validate(schema), async(req: Request, res: Response) => {
-	try {
-		const response = await sendVerificationLinkService(req.body.email);
+const router = Router();
 
+router.post(Route.ConfirmEmail, validate(schema), async(req: Request, res: Response) => {
+	try {
+		const response = await confirmEmail(req.body.email);
 		if (response?.success) {
-			return res.status(201).json({ message: 'Verification link is sent to email address', status: 201 });
+			return res.status(200).json({ message: 'Email verified', status: 200 });
 		}
 	} catch (error) {
 		if (error instanceof ApplicationError) {
