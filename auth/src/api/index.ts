@@ -1,12 +1,12 @@
 import { Router } from 'express';
 
-import confirmEmail from './confirm-email';
+import confirmEmail from './confirmEmail';
 import login from './login';
-import sendVerificationLink from './send-verification-link';
-import signup from './signup';
+import sendVerificationLink from './sendVerificationLink';
+import signUp from './signUp';
 
 const routes = Router()
-	.use(signup)
+	.use(signUp)
 	.use(login)
 	.use(sendVerificationLink)
 	.use(confirmEmail);

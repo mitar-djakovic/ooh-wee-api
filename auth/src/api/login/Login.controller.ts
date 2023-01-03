@@ -1,6 +1,7 @@
 import { Request, Response, Router } from 'express';
 import * as yup from 'yup';
 
+import { Route } from '../../config';
 import { validate } from '../../middlewares';
 import { ApplicationError } from '../../middlewares/errors';
 
@@ -13,11 +14,10 @@ const schema = yup.object({
 	password: yup.string().required('Password is required'),
 });
 
-router.post('/login', validate(schema), async(req: Request, res: Response) => {
+router.post(Route.Login, validate(schema), async(req: Request, res: Response) => {
 	try {
 		const { success, token } = await loginService(req.body);
 
-		console.log('token', token);
 		if (!success) {
 			throw new ApplicationError('Password or email is incorrect', 404);
 		}

@@ -13,7 +13,7 @@ interface User {
 	confirmPassword: string;
 }
 
-export const signupService = async (user: User) => {
+export const signUpService = async (user: User) => {
 	const hashedPassword = await bcrypt.hash(user.password, 10);
 	try {
 		await prisma.user.create({
