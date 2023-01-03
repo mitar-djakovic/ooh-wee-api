@@ -1,4 +1,5 @@
 import AWS from 'aws-sdk';
+import jwt from 'jsonwebtoken';
 
 import { ApplicationError } from '../../middlewares/errors';
 import prisma from '../../utils/prisma';
@@ -14,10 +15,14 @@ export const sendVerificationLinkService = async (email: string) => {
 		const user = await prisma.user.findUniqueOrThrow({ where: {
 			email
 		}});
+
+		const token = jwt.sign({ email }, process.env.TOKEN_SECRET as string, {
+			expiresIn: '1800s',
+		});
 		
 		if (user) {
 			const SES = new AWS.SES(awsConfig);
-			
+
 			const params = {
 				Source: process.env.AWS_EMAIL_SOURCE,
 				Destination: {
@@ -31,12 +36,12 @@ export const sendVerificationLinkService = async (email: string) => {
 					Body: {
 						Html: {
 							Charset: 'UTF-8',
-							Data: `<div><h1>Click on the <a href='http://localhost:3000/verification/:${user.email}'>link</a> to verify account</h1></div>`
+							Data: `<div><h1>Click on the <a href='http://localhost:3000/verification/${token}'>link</a> to verify account</h1></div>`
 						}
 					}
 				}
 			};
-			
+
 			try {
 				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 				// @ts-ignore
