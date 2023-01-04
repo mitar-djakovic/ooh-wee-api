@@ -14,13 +14,17 @@ interface LoginResponse {
 	token: string | null
 }
 
-export const loginService = async (credentials: Credentials): Promise<LoginResponse> => {
+export const loginService = async (credentials: Credentials): Promise<LoginResponse | undefined> => {
 	try {
 		const user = await prisma.user.findUniqueOrThrow({
 			where: {
 				email: credentials.email,
 			}
 		});
+
+		if (!user.emailVerifiedAt) {
+			throw new ApplicationError('Email is not verified', 400);
+		}
 		const match = await bcrypt.compare(credentials.password, user.password);
 		if (match) {
 			const token = jwt.sign({ email: credentials.email }, process.env.TOKEN_SECRET as string, {
@@ -37,7 +41,13 @@ export const loginService = async (credentials: Credentials): Promise<LoginRespo
 			token: null
 		};
 	} catch (error) {
-		throw new ApplicationError('Password or email is incorrect', 404);
+		if (error instanceof ApplicationError) {
+			if (error.status === 400) {
+				throw new ApplicationError(error.message, error.status);
+			}
+		} else {
+			throw new ApplicationError('Password or email is incorrect', 404);
+		}
 	}
 };
 
