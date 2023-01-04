@@ -16,6 +16,8 @@ const schema = yup.object({
 
 router.post(Route.Login, validate(schema), async(req: Request, res: Response) => {
 	try {
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore
 		const { success, token } = await loginService(req.body);
 
 		if (!success) {
