@@ -1,7 +1,6 @@
 import { Request, Response, Router } from 'express';
 import * as yup from 'yup';
 
-import { Route } from '../../config';
 import { validate } from '../../middlewares';
 import { ApplicationError } from '../../middlewares/errors';
 
@@ -13,7 +12,7 @@ const schema = yup.object({
 
 const router = Router();
 
-router.post(Route.ConfirmEmail, validate(schema), async(req: Request, res: Response) => {
+router.post('/confirm-email', validate(schema), async(req: Request, res: Response) => {
 	try {
 		const response = await confirmEmail(req.body.email);
 		if (response?.success) {

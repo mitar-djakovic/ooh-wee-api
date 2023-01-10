@@ -1,7 +1,6 @@
 import { Request, Response, Router } from 'express';
 import * as yup from 'yup';
 
-import { Route } from '../../config';
 import { validate } from '../../middlewares';
 import { ApplicationError } from '../../middlewares/errors';
 
@@ -13,7 +12,7 @@ const schema = yup.object({
 	email: yup.string().email('Please provide a valid email').required('Email is required'),
 });
 
-router.post(Route.SendVerificationLink, validate(schema), async(req: Request, res: Response) => {
+router.post('/send-verification-link', validate(schema), async(req: Request, res: Response) => {
 	try {
 		const response = await sendVerificationLinkService(req.body.email);
 

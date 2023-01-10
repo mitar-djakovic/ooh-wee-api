@@ -18,3 +18,7 @@ model User {
   updatedAt         DateTime    @updatedAt
   emailVerifiedAt    DateTime?
 }
+
+model VeificationQue {
+  email             String      @unique
+}
