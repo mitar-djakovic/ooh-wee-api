@@ -19,6 +19,7 @@ model User {
   emailVerifiedAt    DateTime?
 }
 
-model VeificationQue {
+model VerificationQue {
+  id                String      @id @default(uuid()) @map("_id")
   email             String      @unique
 }

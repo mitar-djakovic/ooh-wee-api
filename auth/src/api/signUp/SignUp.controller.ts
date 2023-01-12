@@ -19,7 +19,7 @@ router.post('/signup', validate(schema), async (req: Request, res: Response) => 
 	try {
 		await signUpService(req.body);
 
-		return res.status(201).json({ message: 'Account created', status: 201 });
+		return res.status(201).json({ message: 'Account created and verification email is sent to your inbox', status: 201 });
 	} catch (error) {
 		if (error instanceof ApplicationError) {
 			return res.status(error.status).json(error).end();
