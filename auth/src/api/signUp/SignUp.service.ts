@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import AWS from 'aws-sdk';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 import { ApplicationError } from '../../middlewares/errors';
 import prisma from '../../utils/prisma';
@@ -18,49 +19,10 @@ const awsSESConfig = {
 };
 
 const getSQSParams = {
-	QueueUrl: process.env.AWS_QUEUE_URL,
+	QueueUrl: process.env.AWS_QUEUE_URL ?? '',
 	MaxNumberOfMessages: 10,
 	VisibilityTimeout: 30,
 	WaitTimeSeconds: 20
-};
-
-const handleVerificationLink = async (messages: any, user: any, SES: any, SQS: any) => {
-	for (const message of messages) {
-		const emailParams = {
-			Source: process.env.AWS_EMAIL_SOURCE,
-			Destination: {
-				ToAddresses: [user.email]
-			},
-			Message: {
-				Subject: {
-					Charset: 'UTF-8',
-					Data: 'Ohh Wee email verification link!'
-				},
-				Body: {
-					Html: {
-						Charset: 'UTF-8',
-						Data: '<div><h1>Click on the <a href=\'http://localhost:3000/verification/blablalba}\'>link</a> to verify account</h1></div>'
-					}
-				},
-			},
-		};
-
-		try {
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-			// @ts-ignore
-			await SES.sendEmail(emailParams).promise();
-
-			const deleteParams = {
-				QueueUrl: process.env.AWS_QUEUE_URL,
-				ReceiptHandle: message.ReceiptHandle
-			};
-			const delted = await SQS.deleteMessage(deleteParams).promise();
-			console.log('delted', delted)
-		} catch (error) {
-			console.error(error);
-		}
-
-	}
 };
 
 export const signUpService = async (user: User) => {
@@ -86,35 +48,71 @@ export const signUpService = async (user: User) => {
 
 		const sendSQSParams = {
 			MessageBody: JSON.stringify(email),
-			QueueUrl: process.env.AWS_QUEUE_URL
+			QueueUrl: process.env.AWS_QUEUE_URL ?? ''
 		};
 
 		try {
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-			// @ts-ignore
-			const data = await SQS.sendMessage(sendSQSParams).promise();
-			console.log('Email added to queue with ID : ', data.MessageId);
-			console.log('data', data);
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-			// @ts-ignore
-			const { Messages }  = await SQS.receiveMessage(getSQSParams).promise();
-			
-			if (Messages) {
-				const response = handleVerificationLink(Messages, user, SES, SQS);
-				console.log('response', response);
-			}
 
+			await SQS.sendMessage(sendSQSParams).promise();
+
+			const { Messages }  = await SQS.receiveMessage(getSQSParams).promise();
+
+			if (Messages) {
+				Messages.map(async (message) => {
+					const token = jwt.sign({ email: user.email }, process.env.TOKEN_SECRET as string, {
+						expiresIn: '1800s',
+					});
+
+					const emailParams = {
+						Source: process.env.AWS_EMAIL_SOURCE ?? '',
+						Destination: {
+							ToAddresses: [user.email]
+						},
+						Message: {
+							Subject: {
+								Charset: 'UTF-8',
+								Data: 'Ohh Wee email verification link!'
+							},
+							Body: {
+								Html: {
+									Charset: 'UTF-8',
+									Data: `<div><h1>Click on the <a href='http://localhost:3000/verification/${token}'>link</a> to verify account</h1></div>`
+								}
+							},
+						},
+					};
+
+					try {
+						await SES.sendEmail(emailParams).promise();
+
+						if (message.ReceiptHandle) {
+							const deleteParams = {
+								QueueUrl: process.env.AWS_QUEUE_URL ?? '',
+								ReceiptHandle: message.ReceiptHandle
+							};
+
+							await SQS.deleteMessage(deleteParams).promise();
+						}
+					} catch (error) {
+						throw new ApplicationError('Something went wrong with email verification!', 400);
+					}
+				});
+			}
 		} catch (error) {
-			console.error('Error while adding email to queue: ', error);
+			throw new ApplicationError('Account is created, but something went wrong while trying to send verification email!', 404);
 		}
 
 	} catch (error) {
 		if (error instanceof  Prisma.PrismaClientKnownRequestError) {
 			if (error.code === 'P2002') {
-				console.log('error', error.meta?.target);
 				throw new ApplicationError('Email already in use!', 404);
 			}
+		} else if (error instanceof ApplicationError) {
+			throw new ApplicationError(error.message, 404);
+		} else {
+			throw new ApplicationError('Something went wrong!', 500);
 		}
-		throw error;
 	}
 };
+
+
