@@ -1,7 +1,6 @@
 import { Request, Response, Router } from 'express';
 import * as yup from 'yup';
 
-import { Route } from '../../config';
 import { validate } from '../../middlewares';
 import { ApplicationError } from '../../middlewares/errors';
 
@@ -16,11 +15,11 @@ const schema = yup.object({
 		.oneOf([yup.ref('password'), null], 'Passwords must match').required('Confirm password is required')
 });
 
-router.post(Route.SignUp, validate(schema), async (req: Request, res: Response) => {
+router.post('/signup', validate(schema), async (req: Request, res: Response) => {
 	try {
 		await signUpService(req.body);
 
-		return res.status(201).json({ message: 'Account created', status: 201 });
+		return res.status(201).json({ message: 'Account created and verification email is sent to your inbox', status: 201 });
 	} catch (error) {
 		if (error instanceof ApplicationError) {
 			return res.status(error.status).json(error).end();
