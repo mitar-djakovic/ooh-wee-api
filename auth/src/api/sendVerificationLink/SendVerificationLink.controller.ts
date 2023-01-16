@@ -20,7 +20,6 @@ router.post('/send-verification-link', validate(schema), async(req: Request, res
 			return res.status(201).json({ message: 'Verification link is sent to email address', status: 201 });
 		}
 	} catch (error) {
-		console.log('error', error);
 		if (error instanceof ApplicationError) {
 			return res.status(error.status).json(error).end();
 		}

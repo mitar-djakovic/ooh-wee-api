@@ -76,7 +76,6 @@ export const signUpService = async (user: User) => {
 		}
 
 	} catch (error) {
-		console.log('error', error);
 		if (error instanceof  Prisma.PrismaClientKnownRequestError) {
 			if (error.code === 'P2002') {
 				throw new ApplicationError('Email already in use!', 404);

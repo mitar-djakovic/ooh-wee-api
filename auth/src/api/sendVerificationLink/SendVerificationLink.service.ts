@@ -64,7 +64,6 @@ export const sendVerificationLinkService = async (email: string) => {
 			success: true
 		};
 	}catch (error) {
-		console.log('error3', error);
 		if (error instanceof NotFoundError) {
 			throw new ApplicationError('This email is not found!', 404);
 		} else {
