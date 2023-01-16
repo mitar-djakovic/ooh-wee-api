@@ -18,13 +18,6 @@ const awsSESConfig = {
 	region: process.env.AWS_REGION,
 };
 
-const getSQSParams = {
-	QueueUrl: process.env.AWS_QUEUE_URL ?? '',
-	MaxNumberOfMessages: 10,
-	VisibilityTimeout: 30,
-	WaitTimeSeconds: 20
-};
-
 export const signUpService = async (user: User) => {
 	const hashedPassword = await bcrypt.hash(user.password, 10);
 	try {
@@ -52,57 +45,38 @@ export const signUpService = async (user: User) => {
 		};
 
 		try {
-
 			await SQS.sendMessage(sendSQSParams).promise();
 
-			const { Messages }  = await SQS.receiveMessage(getSQSParams).promise();
+			const token = jwt.sign({ email: user.email }, process.env.TOKEN_SECRET as string, {
+				expiresIn: '1800s',
+			});
 
-			if (Messages) {
-				Messages.map(async (message) => {
-					const token = jwt.sign({ email: user.email }, process.env.TOKEN_SECRET as string, {
-						expiresIn: '1800s',
-					});
-
-					const emailParams = {
-						Source: process.env.AWS_EMAIL_SOURCE ?? '',
-						Destination: {
-							ToAddresses: [user.email]
-						},
-						Message: {
-							Subject: {
-								Charset: 'UTF-8',
-								Data: 'Ohh Wee email verification link!'
-							},
-							Body: {
-								Html: {
-									Charset: 'UTF-8',
-									Data: `<div><h1>Click on the <a href='http://localhost:3000/verification/${token}'>link</a> to verify account</h1></div>`
-								}
-							},
-						},
-					};
-
-					try {
-						await SES.sendEmail(emailParams).promise();
-
-						if (message.ReceiptHandle) {
-							const deleteParams = {
-								QueueUrl: process.env.AWS_QUEUE_URL ?? '',
-								ReceiptHandle: message.ReceiptHandle
-							};
-
-							await SQS.deleteMessage(deleteParams).promise();
+			const emailParams = {
+				Source: process.env.AWS_EMAIL_SOURCE ?? '',
+				Destination: {
+					ToAddresses: [user.email]
+				},
+				Message: {
+					Subject: {
+						Charset: 'UTF-8',
+						Data: 'Ohh Wee email verification link!'
+					},
+					Body: {
+						Html: {
+							Charset: 'UTF-8',
+							Data: `<div><h1>Click on the <a href='http://localhost:3000/verification/${token}'>link</a> to verify account</h1></div>`
 						}
-					} catch (error) {
-						throw new ApplicationError('Something went wrong with email verification!', 400);
-					}
-				});
-			}
+					},
+				},
+			};
+
+			await SES.sendEmail(emailParams).promise();
 		} catch (error) {
 			throw new ApplicationError('Account is created, but something went wrong while trying to send verification email!', 404);
 		}
 
 	} catch (error) {
+		console.log('error', error);
 		if (error instanceof  Prisma.PrismaClientKnownRequestError) {
 			if (error.code === 'P2002') {
 				throw new ApplicationError('Email already in use!', 404);
