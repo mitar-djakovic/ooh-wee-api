@@ -12,5 +12,5 @@ app.use(cookieParser());
 const PORT = 8001;
 
 app.listen(PORT, async () => {
-  console.log(`Server is listening on port ${PORT}`);
+	console.log(`Server is listening on port ${PORT}`);
 });
